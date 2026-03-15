@@ -33,3 +33,28 @@ async def register(user_in: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     return new_user
+
+
+@app.post("/login")
+def login(response: Response, user_in: UserLogin, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == user_in.username).first()
+    
+    if not user or not verify_password(user_in.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Error")
+
+    if user.is_blocked:
+        raise HTTPException(status_code=403, detail="User is blocked")
+
+    session_id = str(uuid.uuid4())
+    sessions[session_id] = user.id
+    
+    response.set_cookie(key="session_id", value=session_id, httponly=True)
+    return {"message": "Welcome"}
+
+@app.post("/logout")
+def logout(response: Response, request: Request):
+    session_id = request.cookies.get("session_id")
+    if session_id and session_id in sessions:
+        del sessions[session_id]
+    response.delete_cookie("session_id")
+    return {"message": "Logged out"}
