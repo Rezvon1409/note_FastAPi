@@ -1,43 +1,57 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
-class UserCreate(BaseModel):
-    username : str
-    email : EmailStr
-    password : str
-    confirm_password : str
+
+
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    confirm_password: str
+    role: str = "user"   
 
 class UserOut(BaseModel):
-    id : int 
-    username : str
-    email : str
-    is_admin: bool
-    is_blocked: bool
+    id: int
+    email: EmailStr
+    role: str
     created_at: datetime
 
     class Config:
         from_attributes = True
 
-class UserLogin(BaseModel):
-    username: str
+class LoginRequest(BaseModel):
+    email: EmailStr
     password: str
 
-class NoteCreate(BaseModel):
-    title : str
-    content : str
+
+class TokenOut(BaseModel):
+    token: str
+    user_id: int
+    token_expiry: datetime
+
+    class Config:
+        from_attributes = True
+
+
+
+class NoteRequest(BaseModel):
+    title: str
+    description: str
 
 class NoteUpdate(BaseModel):
     title: Optional[str] = None
-    content: Optional[str] = None
+    description: Optional[str] = None
 
 class NoteOut(BaseModel):
     id: int
-    owner_id: int
+    user_id: int
     title: str
-    content: str
+    description: str
     created_at: datetime
     updated_at: datetime
 
     class Config:
         from_attributes = True
+
+class NotesList(BaseModel):
+    notes: List[NoteOut]
